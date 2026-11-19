@@ -1,4 +1,12 @@
-import { Group, Mesh, MeshPhysicalMaterial, Quaternion, SphereGeometry } from 'three';
+import {
+  Color,
+  Group,
+  Mesh,
+  MeshPhysicalMaterial,
+  Quaternion,
+  SphereGeometry,
+  type Texture,
+} from 'three';
 import { BALL_RADIUS } from '@sinuca/core';
 import type { GameController } from '../game/GameController';
 import { orientationToQuaternion } from './coords';
@@ -10,15 +18,19 @@ export class BallModels {
   private readonly meshes: Mesh[] = [];
   private readonly q = new Quaternion();
 
-  constructor(maxAnisotropy: number) {
+  constructor(maxAnisotropy: number, environment: Texture) {
     const geometry = new SphereGeometry(BALL_RADIUS, 64, 48);
     for (let id = 0; id < 16; id++) {
       const material = new MeshPhysicalMaterial({
         map: createBallTexture(id, maxAnisotropy),
-        roughness: 0.16,
-        clearcoat: 1,
-        clearcoatRoughness: 0.03,
-        envMapIntensity: 1.1,
+        // A resina mantém a cor sob a luz forte da mesa; o ambiente escuro deixa
+        // o contorno sombreado e a luminária aparece como um reflexo localizado.
+        color: new Color().setScalar(0.65),
+        roughness: 0.22,
+        clearcoat: 0.85,
+        clearcoatRoughness: 0.12,
+        envMap: environment,
+        envMapIntensity: 0.6,
         specularIntensity: 0.6,
       });
       const m = new Mesh(geometry, material);

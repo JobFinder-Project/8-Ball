@@ -14,11 +14,13 @@ import {
   Vector2,
   Vector3,
   WebGLRenderer,
+  type WebGLRenderTarget,
 } from 'three';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { BALL_RADIUS, type Vec2 } from '@sinuca/core';
 import type { GameController } from '../game/GameController';
 import { AimGuide } from './AimGuide';
+import { createBallEnvironment } from './BallEnvironment';
 import { BallModels } from './BallModels';
 import { CueModel } from './CueModel';
 import { createMaterials } from './materials';
@@ -37,6 +39,7 @@ export class SceneRenderer {
   private readonly camera = new PerspectiveCamera(FOV, 1, 50, 8000);
   private readonly world = new Group();
   private readonly balls: BallModels;
+  private readonly ballEnvironment: WebGLRenderTarget;
   private readonly cue: CueModel;
   private readonly guide: AimGuide;
   private readonly raycaster = new Raycaster();
@@ -62,6 +65,7 @@ export class SceneRenderer {
     this.scene.background = new Color('#070d0b');
     const pmrem = new PMREMGenerator(this.renderer);
     this.scene.environment = pmrem.fromScene(new RoomEnvironment(this.renderer), 0.04).texture;
+    this.ballEnvironment = createBallEnvironment(pmrem);
     pmrem.dispose();
 
     const { length: L, width: W } = game.table.spec;
@@ -71,7 +75,7 @@ export class SceneRenderer {
     const aniso = this.renderer.capabilities.getMaxAnisotropy();
     const materials = createMaterials(aniso);
     this.world.add(buildTableModel(game.table, materials));
-    this.balls = new BallModels(aniso);
+    this.balls = new BallModels(aniso, this.ballEnvironment.texture);
     this.world.add(this.balls.group);
     this.cue = new CueModel(materials);
     this.world.add(this.cue.root);
@@ -144,6 +148,7 @@ export class SceneRenderer {
   }
 
   dispose(): void {
+    this.ballEnvironment.dispose();
     this.renderer.dispose();
     this.renderer.domElement.remove();
   }
