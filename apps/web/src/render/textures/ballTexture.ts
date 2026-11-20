@@ -4,13 +4,13 @@ import { createCanvas } from './noise';
 export const BALL_COLORS: Record<number, string> = {
   0: '#f6f2e7',
   1: '#f2b51b',
-  2: '#173ea3',
-  3: '#cc2721',
-  4: '#4a2678',
-  5: '#ec6512',
-  6: '#167343',
-  7: '#76191c',
-  8: '#0d0d0f',
+  2: '#2671bc',
+  3: '#e22236',
+  4: '#66359a',
+  5: '#f27621',
+  6: '#249346',
+  7: '#8c352b',
+  8: '#20262d',
 };
 
 export const ballColor = (id: number): string => BALL_COLORS[id > 8 ? id - 8 : id]!;
@@ -38,7 +38,7 @@ export function createBallTexture(id: number, maxAnisotropy: number): CanvasText
   }
 
   if (id !== 0) {
-    const r = H * (19 / 180);
+    const r = H * (22 / 180);
     const drawBadge = (cx: number) => {
       ctx.fillStyle = IVORY;
       ctx.beginPath();
@@ -63,17 +63,6 @@ export function createBallTexture(id: number, maxAnisotropy: number): CanvasText
     drawBadge(W);
     ctx.restore();
   }
-
-  // leve variação de tom, como resina real
-  const img = ctx.getImageData(0, 0, W, H);
-  const d = img.data;
-  for (let i = 0; i < d.length; i += 4) {
-    const n = (Math.random() - 0.5) * 3;
-    d[i] = d[i]! + n;
-    d[i + 1] = d[i + 1]! + n;
-    d[i + 2] = d[i + 2]! + n;
-  }
-  ctx.putImageData(img, 0, 0);
 
   const texture = new CanvasTexture(canvas);
   texture.colorSpace = SRGBColorSpace;

@@ -1,50 +1,40 @@
-import {
-  Color,
-  Group,
-  Mesh,
-  MeshPhysicalMaterial,
-  Quaternion,
-  SphereGeometry,
-  type Texture,
-} from 'three';
+import { CircleGeometry, Group, Mesh, Quaternion, SphereGeometry } from 'three';
 import { BALL_RADIUS } from '@sinuca/core';
 import type { GameController } from '../game/GameController';
 import { orientationToQuaternion } from './coords';
 import { createBallTexture } from './textures/ballTexture';
+import { createBallMaterial, createBallShadowMaterial } from './BallMaterial';
 
-/** Malhas das 16 bolas: resina com verniz (clearcoat) e reflexo do ambiente. */
+/** Bolas 3D com acabamento de resina estilizado e sombras de contato no feltro. */
 export class BallModels {
   readonly group = new Group();
   private readonly meshes: Mesh[] = [];
+  private readonly shadows: Mesh[] = [];
   private readonly q = new Quaternion();
 
-  constructor(maxAnisotropy: number, environment: Texture) {
+  constructor(maxAnisotropy: number) {
     const geometry = new SphereGeometry(BALL_RADIUS, 64, 48);
+    const shadowGeometry = new CircleGeometry(BALL_RADIUS * 1.35, 48).rotateX(-Math.PI / 2);
+    const shadowMaterial = createBallShadowMaterial();
     for (let id = 0; id < 16; id++) {
-      const material = new MeshPhysicalMaterial({
-        map: createBallTexture(id, maxAnisotropy),
-        // A resina mantém a cor sob a luz forte da mesa; o ambiente escuro deixa
-        // o contorno sombreado e a luminária aparece como um reflexo localizado.
-        color: new Color().setScalar(0.65),
-        roughness: 0.22,
-        clearcoat: 0.85,
-        clearcoatRoughness: 0.12,
-        envMap: environment,
-        envMapIntensity: 0.6,
-        specularIntensity: 0.6,
-      });
+      const material = createBallMaterial(createBallTexture(id, maxAnisotropy));
       const m = new Mesh(geometry, material);
-      m.castShadow = true;
-      m.receiveShadow = true;
       m.name = `ball-${id}`;
       this.meshes.push(m);
       this.group.add(m);
+      const shadow = new Mesh(shadowGeometry, shadowMaterial);
+      shadow.name = `ball-shadow-${id}`;
+      this.shadows.push(shadow);
+      this.group.add(shadow);
     }
   }
 
   update(game: GameController): void {
     for (const ball of game.balls) {
       const m = this.meshes[ball.id]!;
+      const shadow = this.shadows[ball.id]!;
+      shadow.visible = ball.active;
+      shadow.position.set(ball.x + 2, 0.4, ball.y + 3);
       if (ball.active) {
         m.visible = true;
         m.position.set(ball.x, BALL_RADIUS, ball.y);
@@ -64,6 +54,18 @@ export class BallModels {
         BALL_RADIUS - ease * 160,
         f.from.y + (f.pocket.center.y - f.from.y) * Math.min(1, k * 1.6),
       );
+    }
+  }
+
+  dispose(): void {
+    this.meshes[0]!.geometry.dispose();
+    this.shadows[0]!.geometry.dispose();
+    const shadowMaterial = this.shadows[0]!.material;
+    if (!Array.isArray(shadowMaterial)) shadowMaterial.dispose();
+    for (const mesh of this.meshes) {
+      const material = mesh.material as ReturnType<typeof createBallMaterial>;
+      material.uniforms.ballMap!.value.dispose();
+      material.dispose();
     }
   }
 }
