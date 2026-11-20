@@ -8,6 +8,7 @@ Feito em TypeScript, com o núcleo do jogo (física e regras) separado da interf
 - **Física de verdade:** a bola desliza e depois rola, com atrito do feltro, perdas nas tabelas e caçapas com bico. O efeito (em cima, embaixo e lateral) sai da própria física, sem truques.
 - **Mesa em 3D:** feltro com trama, borrachas, trilho de madeira envernizada, diamantes de madrepérola, bolas com verniz e reflexo, sombras suaves de duas luminárias.
 - **Regras do 8 bolas:** saída, mesa aberta, grupos, faltas, bola na mão, bola 8 cantada e tempo de tacada.
+- **Áudio de sinuca:** gravações reais CC0 de tacadas, colisões e caçapas, com dinâmica de impacto e variações. Créditos em [docs/audio.md](docs/audio.md).
 - **Medidas oficiais:** mesa de 9 pés (2540 × 1270 mm) e bola de 57,15 mm; também há mesas de 8 e 7 pés no núcleo.
 - **Pronto para multijogador:** o núcleo não depende do navegador, então o mesmo código roda num servidor que valida as jogadas.
 
@@ -54,6 +55,8 @@ docs/             arquitetura, modelo físico e regras
 ```
 
 Detalhes em [docs/arquitetura.md](docs/arquitetura.md), [docs/fisica.md](docs/fisica.md) e [docs/regras.md](docs/regras.md).
+
+Prioridades, andamento e critérios de conclusão em [docs/roadmap.md](docs/roadmap.md).
 
 ## Contribuindo
 

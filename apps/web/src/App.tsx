@@ -19,6 +19,21 @@ export function App() {
   const portrait = useIsPortrait();
   const [muted, setMuted] = useState(false);
 
+  useEffect(() => {
+    void sound.preload();
+    const unlock = () => sound.unlock();
+    window.addEventListener('keydown', unlock, true);
+    return () => {
+      window.removeEventListener('keydown', unlock, true);
+      sound.dispose();
+    };
+  }, [sound]);
+
+  const newGame = () => {
+    sound.reset();
+    game.newGame();
+  };
+
   useEffect(
     () => bindKeyboard(game, () => game.paused || view.winner !== null),
     [game, view.winner],
@@ -32,7 +47,7 @@ export function App() {
       <Hud
         view={view}
         muted={muted}
-        onNewGame={() => game.newGame()}
+        onNewGame={newGame}
         onToggleSound={() => {
           sound.muted = !sound.muted;
           setMuted(sound.muted);
@@ -55,7 +70,7 @@ export function App() {
           <PowerBar game={game} power={view.power} vertical={!portrait} />
         </div>
       </main>
-      <GameOverDialog winner={view.winner} onAgain={() => game.newGame()} />
+      <GameOverDialog winner={view.winner} onAgain={newGame} />
     </div>
   );
 }

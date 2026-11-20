@@ -36,7 +36,7 @@ Princípios:
 | `game/`   | `GameController`: liga simulação, regras, relógio, mira e sons. Expõe um `GameView` para o React |
 | `render/` | Cena Three.js: materiais, texturas procedurais, mesa, bolas, taco, linha de mira                 |
 | `input/`  | Toque/mouse na mesa e teclado                                                                    |
-| `audio/`  | Sons sintetizados com Web Audio (sem arquivos)                                                   |
+| `audio/`  | Gravações CC0 de sinuca, pré-carregamento, dinâmica e mixagem com Web Audio                      |
 | `ui/`     | Componentes React: placar, força, mira fina, efeito, avisos                                      |
 | `styles/` | Tokens de design e estilos                                                                       |
 
@@ -48,6 +48,8 @@ requestAnimationFrame
   └─ SceneRenderer.render()     lê bolas, mira e força direto do controller e desenha
 React só renderiza quando o GameView muda (placar, avisos, força, efeito).
 ```
+
+O áudio recebe os eventos de contato e caçapa do controlador. `SoundEngine` seleciona amostras, ajusta volume e timbre pela intensidade, mistura contatos simultâneos e agenda os contatos internos da caçapa.
 
 ### Coordenadas
 
