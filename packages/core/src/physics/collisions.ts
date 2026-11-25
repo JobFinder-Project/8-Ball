@@ -1,6 +1,7 @@
 import type { Ball } from '../ball';
 import { BALL_DIAMETER, BALL_RADIUS, type PhysicsParams } from '../constants';
 import type { Segment } from '../table/types';
+import { activateCueEffect } from './strike';
 
 export const CONTACT_TOLERANCE = 1e-6;
 
@@ -41,6 +42,8 @@ export function resolveBallContact(a: Ball, b: Ball, p: PhysicsParams): number {
   if (approach <= 1e-8) return 0;
 
   const j = ((1 + p.ballRestitution) / 2) * approach;
+  activateCueEffect(a);
+  activateCueEffect(b);
   a.vx -= j * nx;
   a.vy -= j * ny;
   b.vx += j * nx;
@@ -72,6 +75,9 @@ export function resolveCushionContact(ball: Ball, s: Segment, p: PhysicsParams):
 
   const vn = ball.vx * nx + ball.vy * ny;
   if (vn >= -1e-8) return 0;
+
+  // O inglês precisa ser ativado neste contato para influenciar seu rebote.
+  activateCueEffect(ball);
 
   ball.vx -= (1 + p.cushionRestitution) * vn * nx;
   ball.vy -= (1 + p.cushionRestitution) * vn * ny;

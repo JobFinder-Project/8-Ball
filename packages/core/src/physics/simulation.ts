@@ -123,6 +123,7 @@ export function step(
     if (pocket) {
       ball.active = false;
       ball.vx = ball.vy = ball.ux = ball.uy = ball.side = 0;
+      delete ball.pendingEffect;
       events.onPocket?.(ball, pocket);
     }
   }

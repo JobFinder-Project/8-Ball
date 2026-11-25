@@ -20,6 +20,8 @@ export interface Ball {
   ux: number;
   uy: number;
   side: number;
+  /** Efeito reservado pela tacada casual; ativado uma vez, no primeiro contato. */
+  pendingEffect?: { x: number; y: number; amount: number };
   active: boolean;
   orientation: Mat3;
 }
@@ -46,6 +48,7 @@ export function createBall(
 
 export function stopBall(ball: Ball): void {
   ball.vx = ball.vy = ball.ux = ball.uy = ball.side = 0;
+  delete ball.pendingEffect;
 }
 
 export function groupOf(id: number): Group | null {

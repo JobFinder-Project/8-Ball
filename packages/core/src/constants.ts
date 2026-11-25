@@ -47,15 +47,12 @@ export interface CueParams {
   maxSpeed: number;
   /** Afastamento máximo do ponto de contato em relação ao centro, como fração do raio. */
   maxTipOffset: number;
-  /** Desvio da direção causado pelo efeito lateral (rad por unidade de efeito e de força). */
-  squirt: number;
 }
 
 export const DEFAULT_CUE: CueParams = {
   minSpeed: 150,
   maxSpeed: 9000,
   maxTipOffset: 0.5,
-  squirt: 0.02,
 };
 
 /** Passo fixo da simulação. 1 ms mantém o deslocamento por passo abaixo de 1/3 do raio na tacada máxima. */

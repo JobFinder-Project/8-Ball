@@ -159,6 +159,13 @@ describe('precisão dos impactos e energia', () => {
     expect(energy(ball)).toBeLessThanOrEqual(before + 1e-6);
   });
 
+  it.each([-1, 1])('o sinal do giro na tabela corresponde ao ponto do taco (%s)', (side) => {
+    const ball = layout({ 0: [500, BALL_RADIUS - 0.001] })[0]!;
+    applyCueStrike(ball, { angle: -Math.PI / 2, power: 0.5, spin: { x: side, y: 0 } });
+    resolveCushionContact(ball, table.cushions[1]!, DEFAULT_PHYSICS);
+    expect(Math.sign(ball.vx)).toBe(side);
+  });
+
   it('nenhuma combinação da matriz de rebotes cria energia', () => {
     for (const vx of [-9000, -1000, 0, 1000, 9000])
       for (const vy of [-9000, -1000, -100])

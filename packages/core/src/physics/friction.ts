@@ -50,5 +50,6 @@ export function applyClothFriction(ball: Ball, dt: number, p: PhysicsParams): vo
   // Abaixo de 3 mm/s a bola é considerada parada.
   if (ball.vx * ball.vx + ball.vy * ball.vy < 9 && ball.ux * ball.ux + ball.uy * ball.uy < 9) {
     ball.vx = ball.vy = ball.ux = ball.uy = 0;
+    delete ball.pendingEffect;
   }
 }

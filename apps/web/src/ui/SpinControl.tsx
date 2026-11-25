@@ -58,8 +58,10 @@ export function SpinControl({ game, spin }: { game: GameController; spin: Spin }
           <div className="sheet" onClick={(e) => e.stopPropagation()}>
             <h2 id="spin-title">Efeito</h2>
             <p>
-              Toque onde o taco vai bater. Em cima a branca segue, embaixo ela puxa e nos lados muda
-              o ângulo na tabela.
+              A branca sai reta na direção da mira. O efeito entra no primeiro contato: em cima ela
+              segue; embaixo, puxa; nas laterais, muda o rebote na tabela. A mira vai até a primeira
+              bola ou tabela. As indicações de saída são curtas e ignoram outras bolas, sem prever
+              sequências de impactos.
             </p>
             <div
               className="spin-pad"
