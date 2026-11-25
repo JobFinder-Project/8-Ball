@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { SoundEngine } from './audio/SoundEngine';
 import { GameController } from './game/GameController';
 import { useGameView } from './game/useGameView';
@@ -17,7 +17,6 @@ export function App() {
   const game = useMemo(() => new GameController(sound), [sound]);
   const view = useGameView(game);
   const portrait = useIsPortrait();
-  const [muted, setMuted] = useState(false);
 
   useEffect(() => {
     void sound.preload();
@@ -44,15 +43,7 @@ export function App() {
       className={`app${portrait ? ' portrait' : ''}`}
       onPointerDownCapture={() => sound.unlock()}
     >
-      <Hud
-        view={view}
-        muted={muted}
-        onNewGame={newGame}
-        onToggleSound={() => {
-          sound.muted = !sound.muted;
-          setMuted(sound.muted);
-        }}
-      />
+      <Hud view={view} onNewGame={newGame} />
       <main className="stage">
         <div className="controls-left">
           <SpinControl game={game} spin={view.spin} />
