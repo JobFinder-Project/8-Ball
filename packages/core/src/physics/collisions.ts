@@ -2,6 +2,8 @@ import type { Ball } from '../ball';
 import { BALL_DIAMETER, BALL_RADIUS, type PhysicsParams } from '../constants';
 import type { Segment } from '../table/types';
 
+export const CONTACT_TOLERANCE = 1e-6;
+
 /**
  * Colisão entre duas bolas de massa igual.
  * Separa a sobreposição e troca a componente normal da velocidade com restituição e.
@@ -13,19 +15,30 @@ export function resolveBallContact(a: Ball, b: Ball, p: PhysicsParams): number {
   const dx = b.x - a.x;
   const dy = b.y - a.y;
   const d2 = dx * dx + dy * dy;
-  if (d2 >= BALL_DIAMETER * BALL_DIAMETER) return 0;
+  if (d2 > (BALL_DIAMETER + CONTACT_TOLERANCE) ** 2) return 0;
 
-  const d = Math.sqrt(d2) || 1e-6;
-  const nx = dx / d;
-  const ny = dy / d;
-  const overlap = (BALL_DIAMETER - d) / 2;
+  const d = Math.sqrt(d2);
+  let nx: number, ny: number;
+  if (d > 1e-9) {
+    nx = dx / d;
+    ny = dy / d;
+  } else {
+    // Estado degenerado: a linha dos centros não existe. Usa o movimento
+    // relativo; em repouso, IDs dão uma separação estável sob troca da ordem.
+    const vx = a.vx - b.vx,
+      vy = a.vy - b.vy;
+    const speed = Math.hypot(vx, vy);
+    nx = speed > 1e-8 ? vx / speed : a.id < b.id ? 1 : -1;
+    ny = speed > 1e-8 ? vy / speed : 0;
+  }
+  const overlap = Math.max(0, BALL_DIAMETER - d) / 2;
   a.x -= nx * overlap;
   a.y -= ny * overlap;
   b.x += nx * overlap;
   b.y += ny * overlap;
 
   const approach = (a.vx - b.vx) * nx + (a.vy - b.vy) * ny;
-  if (approach <= 0) return 0;
+  if (approach <= 1e-8) return 0;
 
   const j = ((1 + p.ballRestitution) / 2) * approach;
   a.vx -= j * nx;
@@ -49,7 +62,7 @@ export function resolveCushionContact(ball: Ball, s: Segment, p: PhysicsParams):
   const ex = ball.x - qx;
   const ey = ball.y - qy;
   const d2 = ex * ex + ey * ey;
-  if (d2 >= BALL_RADIUS * BALL_RADIUS) return 0;
+  if (d2 > (BALL_RADIUS + CONTACT_TOLERANCE) ** 2) return 0;
 
   const d = Math.sqrt(d2) || 1e-6;
   const nx = ex / d;
@@ -58,23 +71,22 @@ export function resolveCushionContact(ball: Ball, s: Segment, p: PhysicsParams):
   ball.y = qy + ny * BALL_RADIUS;
 
   const vn = ball.vx * nx + ball.vy * ny;
-  if (vn >= 0) return 0;
+  if (vn >= -1e-8) return 0;
 
-  const inX = ball.vx;
-  const inY = ball.vy;
   ball.vx -= (1 + p.cushionRestitution) * vn * nx;
   ball.vy -= (1 + p.cushionRestitution) * vn * ny;
 
-  if (ball.side !== 0) {
-    // Efeito à direita desvia a bola para a direita de quem a lançou, e vice-versa.
-    const tx = -ny;
-    const ty = nx;
-    const sign = -inY * tx + inX * ty >= 0 ? 1 : -1;
-    const kick = ball.side * p.englishTransfer * sign;
-    ball.vx += tx * kick;
-    ball.vy += ty * kick;
-    ball.side *= 0.55;
-  }
+  const tx = -ny,
+    ty = nx;
+  // Velocidade da superfície no contato com a borracha: vt - R·ωz.
+  // I=2/5·mR² ⇒ massa efetiva tangencial = m/3,5. O impulso troca
+  // translação/giro e é limitado pelo impacto normal, sem inventar energia.
+  const slip = ball.vx * tx + ball.vy * ty - ball.side;
+  const limit = p.cushionFriction * (1 + p.cushionRestitution) * -vn;
+  const impulse = Math.max(-limit, Math.min(limit, -slip / 3.5));
+  ball.vx += tx * impulse;
+  ball.vy += ty * impulse;
+  ball.side -= 2.5 * impulse;
 
   const un = ball.ux * nx + ball.uy * ny;
   ball.ux -= (1 + p.cushionRollReversal) * un * nx;

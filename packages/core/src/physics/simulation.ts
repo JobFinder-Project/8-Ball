@@ -1,12 +1,13 @@
 import type { Ball } from '../ball';
 import { DEFAULT_PHYSICS, SIMULATION_STEP, type PhysicsParams } from '../constants';
 import { orthonormalize } from '../math/mat3';
-import type { TableGeometry } from '../table/types';
+import type { Segment, TableGeometry } from '../table/types';
 import { resolveBallContact, resolveCushionContact } from './collisions';
 import type { SimulationEvents } from './events';
 import { applyClothFriction } from './friction';
 import { integrateOrientation } from './orientation';
 import { detectPocket } from './pockets';
+import { ballContactTime, cushionContactTime } from './sweep';
 
 export interface Simulation {
   table: TableGeometry;
@@ -24,7 +25,7 @@ export function createSimulation(
 }
 
 export function isMoving(balls: readonly Ball[]): boolean {
-  for (const b of balls) if (b.active && (b.vx || b.vy || b.ux || b.uy)) return true;
+  for (const b of balls) if (b.active && (b.vx || b.vy || b.ux || b.uy || b.side)) return true;
   return false;
 }
 
@@ -35,20 +36,73 @@ export function step(
   events: SimulationEvents = {},
 ): void {
   const { balls, params, table } = sim;
+  // Empates de tempo entre contatos não podem depender da cor/número das bolas
+  // nem da ordem recebida do servidor. Mantém a lista pública intacta (índice=id).
+  const contactOrder = balls.filter((ball) => ball.active).sort((a, b) => a.x - b.x || a.y - b.y);
 
   for (const ball of balls) {
     if (!ball.active) continue;
     applyClothFriction(ball, dt, params);
-    ball.x += ball.vx * dt;
-    ball.y += ball.vy * dt;
     integrateOrientation(ball, dt);
   }
 
-  for (let i = 0; i < balls.length; i++) {
-    const a = balls[i]!;
+  // Atrito/giro continuam em passos fixos; dentro de cada passo os impactos
+  // ocorrem no instante de contato, não na normal de uma sobreposição tardia.
+  let remaining = dt;
+  for (let impacts = 0; remaining > 1e-12 && impacts < 64; impacts++) {
+    let time = Infinity;
+    let pair: [Ball, Ball] | null = null;
+    let wall: { ball: Ball; segment: Segment } | null = null;
+    for (let i = 0; i < contactOrder.length; i++) {
+      const a = contactOrder[i]!;
+      if (!a.active) continue;
+      for (let j = i + 1; j < contactOrder.length; j++) {
+        const b = contactOrder[j]!;
+        if (!b.active) continue;
+        const at = ballContactTime(a, b, remaining);
+        if (at < time) {
+          time = at;
+          pair = [a, b];
+          wall = null;
+        }
+      }
+      if (a.vx === 0 && a.vy === 0) continue;
+      for (const segment of table.cushions) {
+        const at = cushionContactTime(a, segment, remaining);
+        if (at < time) {
+          time = at;
+          wall = { ball: a, segment };
+          pair = null;
+        }
+      }
+    }
+    if (!Number.isFinite(time)) break;
+    move(time);
+    remaining -= time;
+    if (pair) {
+      const speed = resolveBallContact(pair[0], pair[1], params);
+      if (speed > 0) events.onBallContact?.(pair[0], pair[1], speed);
+    } else if (wall) {
+      const speed = resolveCushionContact(wall.ball, wall.segment, params);
+      if (speed > 0) events.onCushionContact?.(wall.ball, speed);
+    }
+  }
+  move(remaining);
+
+  function move(seconds: number) {
+    for (const ball of balls)
+      if (ball.active) {
+        ball.x += ball.vx * seconds;
+        ball.y += ball.vy * seconds;
+      }
+  }
+
+  // Corrige também sobreposições preexistentes/contatos simultâneos no rack.
+  for (let i = 0; i < contactOrder.length; i++) {
+    const a = contactOrder[i]!;
     if (!a.active) continue;
-    for (let j = i + 1; j < balls.length; j++) {
-      const b = balls[j]!;
+    for (let j = i + 1; j < contactOrder.length; j++) {
+      const b = contactOrder[j]!;
       if (!b.active) continue;
       const speed = resolveBallContact(a, b, params);
       if (speed > 0) events.onBallContact?.(a, b, speed);
@@ -85,12 +139,12 @@ export function advance(
 ): number {
   let remaining = elapsed;
   let n = 0;
-  while (remaining >= SIMULATION_STEP && n < maxSteps) {
+  while (remaining + 1e-12 >= SIMULATION_STEP && n < maxSteps) {
     step(sim, SIMULATION_STEP, events);
     remaining -= SIMULATION_STEP;
     n++;
   }
-  return n >= maxSteps ? 0 : remaining;
+  return n >= maxSteps ? 0 : Math.max(0, remaining);
 }
 
 /** Roda até todas as bolas pararem. Útil para servidor, testes e IA. */

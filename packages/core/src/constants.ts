@@ -22,8 +22,8 @@ export interface PhysicsParams {
   ballRestitution: number;
   /** Coeficiente de restituição bola-tabela. */
   cushionRestitution: number;
-  /** Fração do giro lateral convertida em desvio na tabela. */
-  englishTransfer: number;
+  /** Coeficiente de atrito tangencial bola-borracha (limita o impulso de Coulomb). */
+  cushionFriction: number;
   /** Quanto do rolamento normal à tabela se inverte no impacto. */
   cushionRollReversal: number;
 }
@@ -36,7 +36,7 @@ export const DEFAULT_PHYSICS: PhysicsParams = {
   sideSpinDecay: 2500,
   ballRestitution: 0.94,
   cushionRestitution: 0.76,
-  englishTransfer: 0.2,
+  cushionFriction: 0.2,
   cushionRollReversal: 0.6,
 };
 
