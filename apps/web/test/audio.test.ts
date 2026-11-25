@@ -4,6 +4,11 @@ import { SOUND_BANK } from '../src/audio/samples';
 
 class Param {
   value = 0;
+  cancelScheduledValues = vi.fn();
+  linearRampToValueAtTime = vi.fn();
+  setTargetAtTime = vi.fn((value: number) => {
+    this.value = value;
+  });
   setValueAtTime = vi.fn((value: number) => {
     this.value = value;
   });
@@ -16,7 +21,7 @@ class Node {
 }
 
 class Source extends Node {
-  buffer: { id: number } | null = null;
+  buffer: { id: number; duration: number } | null = null;
   playbackRate = new Param();
   onended: (() => void) | null = null;
   start = vi.fn();
@@ -38,7 +43,10 @@ class Context {
   close = vi.fn(async () => {
     this.state = 'closed';
   });
-  decodeAudioData = vi.fn(async (data: ArrayBuffer) => ({ id: new Uint8Array(data)[0] }));
+  decodeAudioData = vi.fn(async (data: ArrayBuffer) => ({
+    id: new Uint8Array(data)[0],
+    duration: 0.2,
+  }));
   createGain = vi.fn(() => {
     const gain = new Node();
     this.gains.push(gain);
@@ -166,6 +174,134 @@ describe('áudio de sinuca', () => {
     engine.ball(Infinity);
     await Promise.resolve();
     expect(ctx.sources).toHaveLength(0);
+  });
+
+  it('aplica ataque e término suaves, calculados a partir da duração e da velocidade da amostra', async () => {
+    const ctx = await ready();
+    engine.ball(3200);
+    await Promise.resolve();
+    const source = ctx.sources[0]!;
+    const gain = ctx.gains[1]!.gain;
+    const duration = source.buffer!.duration / source.playbackRate.value;
+    expect(gain.setValueAtTime).toHaveBeenCalledWith(0, 0);
+    expect(gain.linearRampToValueAtTime).toHaveBeenCalledWith(0.75, 0.001);
+    expect(gain.linearRampToValueAtTime).toHaveBeenCalledWith(0, duration);
+    expect(source.stop).not.toHaveBeenCalled(); // deixa o buffer terminar naturalmente
+  });
+
+  it('preserva o tom nas diferentes forças e deixa a colisão fraca realmente mais suave', async () => {
+    const ctx = await ready();
+    engine.ball(320);
+    engine.ball(3200);
+    await Promise.resolve();
+    expect(ctx.sources.map((source) => source.playbackRate.value)).toEqual([1, 1]);
+    const strong = ctx.gains[1]!.gain.linearRampToValueAtTime.mock.calls[0]![0];
+    const soft = ctx.gains[2]!.gain.linearRampToValueAtTime.mock.calls[0]![0];
+    expect(soft / strong).toBeCloseTo(Math.pow(0.1, 0.9));
+  });
+
+  it('deixa a tabela longa terminar mesmo quando outra colisão ocorre durante sua cauda', async () => {
+    await engine.preload();
+    engine.unlock();
+    const ctx = contexts[0]!;
+    ctx.decodeAudioData.mockImplementation(async (data) => ({
+      id: new Uint8Array(data)[0],
+      duration: 1.2,
+    }));
+    await vi.waitFor(() => expect(ctx.decodeAudioData).toHaveBeenCalledTimes(urls.length));
+    engine.cushion(2400);
+    await Promise.resolve();
+    const cushion = ctx.sources[0]!;
+    expect(ctx.gains[1]!.gain.linearRampToValueAtTime).toHaveBeenCalledWith(0, 1.2);
+    ctx.currentTime = 0.4;
+    engine.ball(1600);
+    await Promise.resolve();
+    expect(cushion.stop).not.toHaveBeenCalled();
+    expect(cushion.playbackRate.value).toBe(1);
+  });
+
+  it('troca uma voz antiga por uma nova colisão sem interromper a onda instantaneamente', async () => {
+    const ctx = await ready();
+    for (let frame = 0; frame < 3; frame++) {
+      for (let i = 0; i < 8; i++) engine.ball(3200);
+      await Promise.resolve();
+    }
+    ctx.currentTime = 0.05;
+    engine.ball(3200);
+    await Promise.resolve();
+    expect(ctx.sources).toHaveLength(25);
+    expect(ctx.sources[0]!.stop).toHaveBeenCalledWith(0.058);
+    expect(ctx.gains[1]!.gain.cancelScheduledValues).toHaveBeenCalledWith(0.05);
+    expect(ctx.gains[1]!.gain.linearRampToValueAtTime).toHaveBeenCalledWith(0, 0.058);
+  });
+
+  it('reinicia com fade na voz atual e cancela o retorno futuro antes de ele tocar', async () => {
+    const ctx = await ready();
+    engine.pocket();
+    await Promise.resolve();
+    ctx.currentTime = 0.05;
+    engine.reset();
+    expect(ctx.sources[0]!.stop).toHaveBeenCalledWith(0.058);
+    expect(ctx.sources[1]!.stop).toHaveBeenCalledWith(0.05);
+    engine.ball(3200);
+    await Promise.resolve();
+    expect(ctx.sources).toHaveLength(3);
+  });
+
+  it('não perde amostras quando o contexto é recriado durante a decodificação', async () => {
+    await engine.preload();
+    engine.unlock();
+    const first = contexts[0]!;
+    let finish!: () => void;
+    const blocked = new Promise<void>((resolve) => {
+      finish = resolve;
+    });
+    first.decodeAudioData.mockImplementation(async (data) => {
+      await blocked;
+      return { id: new Uint8Array(data)[0], duration: 0.2 };
+    });
+    await vi.waitFor(() => expect(first.decodeAudioData).toHaveBeenCalledTimes(urls.length));
+    engine.dispose();
+    engine.unlock();
+    const second = contexts[1]!;
+    await vi.waitFor(() => expect(second.decodeAudioData).toHaveBeenCalledTimes(urls.length));
+    engine.ball(3200);
+    await Promise.resolve();
+    expect(second.sources).toHaveLength(1);
+    finish();
+    await Promise.resolve();
+    engine.ball(3200);
+    await Promise.resolve();
+    expect(second.sources).toHaveLength(2);
+    expect(fetch).toHaveBeenCalledTimes(urls.length);
+  });
+
+  it('descarta eventos atrasados mesmo quando o relógio de um contexto suspenso não avança', async () => {
+    const ctx = await ready();
+    const clock = vi.spyOn(performance, 'now').mockReturnValue(1000);
+    ctx.state = 'suspended';
+    engine.ball(3200);
+    await Promise.resolve();
+    expect(ctx.sources).toHaveLength(0);
+    clock.mockReturnValue(1300);
+    engine.unlock();
+    await Promise.resolve();
+    expect(ctx.currentTime).toBe(0);
+    expect(ctx.sources).toHaveLength(0);
+    engine.ball(3200);
+    await Promise.resolve();
+    expect(ctx.sources).toHaveLength(1);
+  });
+
+  it('aguarda a retomada do contexto para tocar um evento que ainda é recente', async () => {
+    const ctx = await ready();
+    ctx.state = 'suspended';
+    engine.cue(8000);
+    await Promise.resolve();
+    expect(ctx.sources).toHaveLength(0);
+    engine.unlock();
+    await Promise.resolve();
+    expect(ctx.sources).toHaveLength(1);
   });
 
   it('tenta novamente arquivos que falharam sem impedir o uso dos demais', async () => {
