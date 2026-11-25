@@ -27,6 +27,18 @@ export function ballContactTime(a: Ball, b: Ball, maxTime: number): number {
 /** Cápsula: duas faces paralelas e duas extremidades circulares. */
 export function cushionContactTime(ball: Ball, s: Segment, maxTime: number): number {
   if (ball.vx === 0 && ball.vy === 0) return Infinity;
+  // Rejeita bicos distantes antes dos cálculos de cápsula. As curvas usam
+  // vários segmentos curtos, mas não podem afetar a bola fora desta caixa.
+  const endX = ball.x + ball.vx * maxTime,
+    endY = ball.y + ball.vy * maxTime;
+  const radius = BALL_RADIUS + CONTACT_TOLERANCE;
+  if (
+    Math.max(ball.x, endX) < Math.min(s.x1, s.x2) - radius ||
+    Math.min(ball.x, endX) > Math.max(s.x1, s.x2) + radius ||
+    Math.max(ball.y, endY) < Math.min(s.y1, s.y2) - radius ||
+    Math.min(ball.y, endY) > Math.max(s.y1, s.y2) + radius
+  )
+    return Infinity;
   const length = Math.sqrt(s.lengthSq);
   const tx = s.dx / length,
     ty = s.dy / length;
