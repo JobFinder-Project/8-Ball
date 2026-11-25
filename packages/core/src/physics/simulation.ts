@@ -3,6 +3,7 @@ import { DEFAULT_PHYSICS, SIMULATION_STEP, type PhysicsParams } from '../constan
 import { orthonormalize } from '../math/mat3';
 import type { Segment, TableGeometry } from '../table/types';
 import { resolveBallContact, resolveCushionContact } from './collisions';
+import { resolveBallCluster } from './cluster';
 import type { SimulationEvents } from './events';
 import { applyClothFriction } from './friction';
 import { integrateOrientation } from './orientation';
@@ -80,8 +81,7 @@ export function step(
     move(time);
     remaining -= time;
     if (pair) {
-      const speed = resolveBallContact(pair[0], pair[1], params);
-      if (speed > 0) events.onBallContact?.(pair[0], pair[1], speed);
+      resolveBallCluster(contactOrder, pair, params, events);
     } else if (wall) {
       const speed = resolveCushionContact(wall.ball, wall.segment, params);
       if (speed > 0) events.onCushionContact?.(wall.ball, speed);
