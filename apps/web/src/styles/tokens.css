@@ -1,5 +1,7 @@
 /* Identidade visual: salão escuro, feltro verde e dourado de destaque. Tema único escuro por escolha. */
 :root {
+  /* Textos e controles acompanham telas grandes; a câmera usa as medidas da mesa. */
+  font-size: clamp(16px, 1.3vw, 28px);
   --bg: #070d0b;
   --surface: #10211b;
   --line: #22413a;
@@ -14,7 +16,7 @@
   --font-display: 'Teko', 'Barlow Semi Condensed', system-ui, sans-serif;
   --font-body: 'Barlow Semi Condensed', system-ui, -apple-system, 'Segoe UI', sans-serif;
 
-  --radius: 12px;
-  --gap: 10px;
+  --radius: 0.75rem;
+  --gap: 0.625rem;
   color-scheme: dark;
 }

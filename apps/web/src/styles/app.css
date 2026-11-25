@@ -19,20 +19,20 @@ body {
   touch-action: none;
 }
 button {
-  font: 600 13px var(--font-body);
+  font: 600 0.8125rem var(--font-body);
   color: var(--text);
   background: #ffffff0d;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 5px 10px;
+  border: 0.0625rem solid var(--line);
+  border-radius: 0.5rem;
+  padding: 0.3125rem 0.625rem;
   cursor: pointer;
 }
 button:hover {
   background: #ffffff1a;
 }
 :focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
+  outline: 0.125rem solid var(--accent);
+  outline-offset: 0.125rem;
 }
 .primary {
   background: var(--accent);
@@ -48,28 +48,28 @@ button:hover {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   gap: var(--gap);
-  padding-block: max(10px, env(safe-area-inset-top, 0px))
-    max(10px, env(safe-area-inset-bottom, 0px));
-  padding-left: max(16px, env(safe-area-inset-left, 0px));
-  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: max(0.625rem, env(safe-area-inset-top, 0rem))
+    max(0.625rem, env(safe-area-inset-bottom, 0rem));
+  padding-left: max(1rem, env(safe-area-inset-left, 0rem));
+  padding-right: max(1rem, env(safe-area-inset-right, 0rem));
 }
 
 /* ---------- placar ---------- */
 .hud {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  gap: 12px;
+  gap: 0.75rem;
 }
 .hud-center {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 0.25rem;
 }
 .brand {
   font-family: var(--font-display);
-  font-size: 30px;
+  font-size: 1.875rem;
   line-height: 0.8;
   letter-spacing: 0.04em;
   white-space: nowrap;
@@ -85,20 +85,20 @@ button:hover {
   font-size: 0.8em;
   vertical-align: 0.08em;
   box-shadow:
-    inset -3px -3px 5px #000a,
-    inset 2px 2px 3px #fff2;
+    inset -0.1875rem -0.1875rem 0.3125rem #000a,
+    inset 0.125rem 0.125rem 0.1875rem #fff2;
 }
 .hud-buttons {
   display: flex;
-  gap: 6px;
+  gap: 0.375rem;
 }
 .audio-credits summary {
   display: grid;
   place-items: center;
-  min-width: 28px;
+  min-width: 1.75rem;
   height: 100%;
-  border: 1px solid var(--line);
-  border-radius: 8px;
+  border: 0.0625rem solid var(--line);
+  border-radius: 0.5rem;
   cursor: pointer;
 }
 .audio-credits summary::-webkit-details-marker {
@@ -107,19 +107,19 @@ button:hover {
 .audio-credits-panel {
   position: fixed;
   z-index: 100;
-  top: 100px;
+  top: 6.25rem;
   left: 50%;
   transform: translateX(-50%);
-  width: min(420px, 90vw);
+  width: min(26.25rem, 90vw);
   max-height: 60vh;
   overflow-y: auto;
   touch-action: pan-y;
   background: var(--surface);
-  border: 1px solid var(--line);
+  border: 0.0625rem solid var(--line);
   border-radius: var(--radius);
-  padding: 16px;
-  box-shadow: 0 8px 32px #0008;
-  font-size: 14px;
+  padding: 1rem;
+  box-shadow: 0 0.5rem 2rem #0008;
+  font-size: 0.875rem;
   user-select: text;
 }
 .audio-credits-panel a {
@@ -128,13 +128,13 @@ button:hover {
 
 .player {
   background: var(--surface);
-  border: 1px solid var(--line);
+  border: 0.0625rem solid var(--line);
   border-radius: var(--radius);
-  padding: 8px 12px;
+  padding: 0.5rem 0.75rem;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
-  column-gap: 10px;
-  row-gap: 4px;
+  column-gap: 0.625rem;
+  row-gap: 0.25rem;
   min-width: 0;
   transition:
     border-color 0.2s,
@@ -142,14 +142,14 @@ button:hover {
 }
 .player .avatar {
   grid-row: 1 / 3;
-  width: 34px;
-  height: 34px;
+  width: 2.125rem;
+  height: 2.125rem;
   border-radius: 50%;
   display: grid;
   place-items: center;
   align-self: center;
   font-family: var(--font-display);
-  font-size: 22px;
+  font-size: 1.375rem;
   line-height: 1;
   color: var(--bg);
 }
@@ -170,13 +170,13 @@ button:hover {
 }
 .player .name {
   font-weight: 700;
-  font-size: 15px;
+  font-size: 0.9375rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .player .status {
-  font-size: 12px;
+  font-size: 0.75rem;
   color: var(--muted);
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -184,29 +184,29 @@ button:hover {
 .chips {
   grid-column: 1 / 3;
   display: flex;
-  gap: 3px;
+  gap: 0.1875rem;
   flex-wrap: wrap;
-  min-height: 14px;
+  min-height: 0.875rem;
 }
 .chip {
-  width: 14px;
-  height: 14px;
+  width: 0.875rem;
+  height: 0.875rem;
   border-radius: 50%;
   flex: none;
-  box-shadow: inset -2px -2px 3px #0006;
+  box-shadow: inset -0.125rem -0.125rem 0.1875rem #0006;
 }
 .chip.eight {
   box-shadow:
-    inset -2px -2px 3px #0006,
-    0 0 0 1px #fff3;
+    inset -0.125rem -0.125rem 0.1875rem #0006,
+    0 0 0 0.0625rem #fff3;
 }
 .chip.out {
   opacity: 0.18;
 }
 .clock {
   grid-column: 1 / 3;
-  height: 3px;
-  border-radius: 2px;
+  height: 0.1875rem;
+  border-radius: 0.125rem;
   background: #ffffff14;
   overflow: hidden;
 }
@@ -220,8 +220,8 @@ button:hover {
 .player.active {
   border-color: var(--accent);
   box-shadow:
-    0 0 0 1px var(--accent),
-    0 6px 24px #e7b54d22;
+    0 0 0 0.0625rem var(--accent),
+    0 0.375rem 1.5rem #e7b54d22;
 }
 .player.active .clock i {
   background: var(--accent);
@@ -234,8 +234,8 @@ button:hover {
 .stage {
   display: grid;
   min-height: 0;
-  gap: 12px;
-  grid-template-columns: 64px minmax(0, 1fr) 64px;
+  gap: 0.75rem;
+  grid-template-columns: 4rem minmax(0, 1fr) 4rem;
   grid-template-areas: 'left table right';
 }
 .controls-left {
@@ -243,7 +243,7 @@ button:hover {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 0.75rem;
   min-height: 0;
 }
 .controls-right {
@@ -251,7 +251,7 @@ button:hover {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 0.5rem;
   min-height: 0;
 }
 .table-area {
@@ -259,7 +259,7 @@ button:hover {
   position: relative;
   min-width: 0;
   min-height: 0;
-  border-radius: 6px;
+  border-radius: 0.375rem;
   overflow: hidden;
 }
 .table-host {
@@ -274,7 +274,7 @@ button:hover {
   background: radial-gradient(ellipse at center, transparent 55%, #0000004d 100%);
 }
 .label {
-  font-size: 11px;
+  font-size: 0.6875rem;
   color: var(--muted);
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -282,8 +282,8 @@ button:hover {
 }
 
 .spin-button {
-  width: 56px;
-  height: 56px;
+  width: 3.5rem;
+  height: 3.5rem;
   border-radius: 50%;
   padding: 0;
   display: grid;
@@ -299,7 +299,7 @@ button:hover {
 .cueface.big {
   max-width: 70vw;
   max-height: 70vw;
-  box-shadow: 0 10px 30px #000a;
+  box-shadow: 0 0.625rem 1.875rem #000a;
 }
 .cuedot {
   position: absolute;
@@ -308,7 +308,7 @@ button:hover {
   border-radius: 50%;
   background: #e2342b;
   transform: translate(-50%, -50%);
-  box-shadow: 0 0 0 2px #fff8;
+  box-shadow: 0 0 0 0.125rem #fff8;
 }
 .spin-pad {
   cursor: crosshair;
@@ -317,25 +317,25 @@ button:hover {
 
 .fine {
   flex: 1;
-  width: 44px;
-  min-height: 80px;
-  border-radius: 22px;
-  border: 1px solid var(--line);
-  background: repeating-linear-gradient(180deg, #2c4a41 0 3px, #162a24 3px 9px);
-  background-position: 0 var(--offset, 0px);
+  width: 2.75rem;
+  min-height: 5rem;
+  border-radius: 1.375rem;
+  border: 0.0625rem solid var(--line);
+  background: repeating-linear-gradient(180deg, #2c4a41 0 0.1875rem, #162a24 0.1875rem 0.5625rem);
+  background-position: 0 var(--offset, 0rem);
   cursor: ns-resize;
   touch-action: none;
   box-shadow:
-    inset 0 8px 12px #000a,
-    inset 0 -8px 12px #000a;
+    inset 0 0.5rem 0.75rem #000a,
+    inset 0 -0.5rem 0.75rem #000a;
 }
 .power {
   position: relative;
   flex: 1;
-  width: 50px;
-  min-height: 120px;
+  width: 3.125rem;
+  min-height: 7.5rem;
   border-radius: var(--radius);
-  border: 1px solid var(--line);
+  border: 0.0625rem solid var(--line);
   background: #08110e;
   overflow: hidden;
   cursor: ns-resize;
@@ -352,9 +352,9 @@ button:hover {
   position: absolute;
   left: 50%;
   top: 6%;
-  width: 10px;
+  width: 0.625rem;
   height: 88%;
-  border-radius: 5px;
+  border-radius: 0.3125rem;
   background: linear-gradient(
     180deg,
     #3e7fbf 0 2%,
@@ -365,21 +365,21 @@ button:hover {
     #1b1612 70% 88%,
     #3a1d0c 88% 100%
   );
-  box-shadow: 0 2px 6px #000c;
+  box-shadow: 0 0.125rem 0.375rem #000c;
 }
 
 /* ---------- avisos ---------- */
 .prompt {
   position: absolute;
   left: 50%;
-  top: 8px;
+  top: 0.5rem;
   transform: translateX(-50%);
   background: #071210d9;
-  border: 1px solid var(--accent);
+  border: 0.0625rem solid var(--accent);
   color: var(--accent);
-  border-radius: 999px;
-  padding: 4px 12px;
-  font-size: 13px;
+  border-radius: 62.4375rem;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   pointer-events: none;
   white-space: nowrap;
@@ -393,13 +393,13 @@ button:hover {
   top: 50%;
   transform: translate(-50%, -50%) scale(0.96);
   background: #071210e6;
-  border: 1px solid var(--line);
+  border: 0.0625rem solid var(--line);
   border-radius: var(--radius);
-  padding: 10px 16px;
+  padding: 0.625rem 1rem;
   font-weight: 700;
-  font-size: 16px;
+  font-size: 1rem;
   text-align: center;
-  max-width: min(80%, 440px);
+  max-width: min(80%, 27.5rem);
   opacity: 0;
   pointer-events: none;
   transition:
@@ -425,24 +425,24 @@ button:hover {
   display: grid;
   place-items: center;
   z-index: 20;
-  padding: 16px;
+  padding: 1rem;
 }
 .sheet {
   background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  padding: 20px;
+  border: 0.0625rem solid var(--line);
+  border-radius: 1rem;
+  padding: 1.25rem;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 0.875rem;
   align-items: center;
-  max-width: 360px;
+  max-width: 22.5rem;
   width: 100%;
 }
 .sheet h2 {
   font-family: var(--font-display);
   font-weight: 600;
-  font-size: 34px;
+  font-size: 2.125rem;
   line-height: 1;
   margin: 0;
   letter-spacing: 0.03em;
@@ -452,17 +452,17 @@ button:hover {
   margin: 0;
   color: var(--muted);
   text-align: center;
-  font-size: 15px;
+  font-size: 0.9375rem;
 }
 .row {
   display: flex;
-  gap: 8px;
+  gap: 0.5rem;
 }
 
 /* ---------- retrato ---------- */
 .app.portrait .stage {
   grid-template-columns: auto minmax(0, 1fr);
-  grid-template-rows: minmax(0, 1fr) 60px;
+  grid-template-rows: minmax(0, 1fr) 3.75rem;
   grid-template-areas: 'table table' 'left right';
 }
 .app.portrait .controls-left,
@@ -473,20 +473,20 @@ button:hover {
   display: none;
 }
 .app.portrait .fine {
-  height: 44px;
+  height: 2.75rem;
   width: auto;
   min-height: 0;
-  min-width: 110px;
+  min-width: 6.875rem;
   flex: 1;
   cursor: ew-resize;
-  background: repeating-linear-gradient(90deg, #2c4a41 0 3px, #162a24 3px 9px);
-  background-position: var(--offset, 0px) 0;
+  background: repeating-linear-gradient(90deg, #2c4a41 0 0.1875rem, #162a24 0.1875rem 0.5625rem);
+  background-position: var(--offset, 0rem) 0;
   box-shadow:
-    inset 8px 0 12px #000a,
-    inset -8px 0 12px #000a;
+    inset 0.5rem 0 0.75rem #000a,
+    inset -0.5rem 0 0.75rem #000a;
 }
 .app.portrait .power {
-  height: 50px;
+  height: 3.125rem;
   width: auto;
   min-height: 0;
   flex: 1;
@@ -501,7 +501,7 @@ button:hover {
 .app.portrait .power-cue {
   top: 50%;
   left: 6%;
-  height: 10px;
+  height: 0.625rem;
   width: 88%;
   background: linear-gradient(
     90deg,
@@ -517,38 +517,38 @@ button:hover {
 
 @media (max-width: 560px) {
   .brand {
-    font-size: 22px;
+    font-size: 1.375rem;
   }
   .player {
-    padding: 6px 8px;
+    padding: 0.375rem 0.5rem;
   }
   .player .name {
     display: none;
   }
   .player .avatar {
-    width: 26px;
-    height: 26px;
-    font-size: 18px;
+    width: 1.625rem;
+    height: 1.625rem;
+    font-size: 1.125rem;
     grid-row: 1 / 2;
   }
   .player .status {
-    font-size: 11px;
+    font-size: 0.6875rem;
     align-self: center;
   }
   .chip {
-    width: 11px;
-    height: 11px;
+    width: 0.6875rem;
+    height: 0.6875rem;
   }
   .hud {
-    gap: 6px;
+    gap: 0.375rem;
   }
   .hud-buttons {
     flex-direction: column;
-    gap: 4px;
+    gap: 0.25rem;
   }
   .hud-buttons button {
-    font-size: 12px;
-    padding: 3px 8px;
+    font-size: 0.75rem;
+    padding: 0.1875rem 0.5rem;
   }
 }
 @media (prefers-reduced-motion: reduce) {

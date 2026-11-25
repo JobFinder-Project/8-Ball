@@ -6,7 +6,10 @@ const LIMIT = 0.8;
 
 function CueBallFace({ spin, size, className }: { spin: Spin; size: number; className?: string }) {
   return (
-    <span className={`cueface ${className ?? ''}`} style={{ width: size, height: size }}>
+    <span
+      className={`cueface ${className ?? ''}`}
+      style={{ width: `${size / 16}rem`, height: `${size / 16}rem` }}
+    >
       <span
         className="cuedot"
         style={{ left: `${50 + spin.x * 38}%`, top: `${50 - spin.y * 38}%` }}
