@@ -138,6 +138,7 @@ export class SceneRenderer {
       g.power * 240,
       g.spin,
       g.canAct && cue.active && !this.draggingCue,
+      g.balls,
     );
     this.guide.update(g, time, this.draggingCue);
     this.renderer.render(this.scene, this.camera);
