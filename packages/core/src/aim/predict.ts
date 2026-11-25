@@ -22,7 +22,7 @@ export type ShotPrediction =
     }
   | { kind: 'none'; ghost: { x: number; y: number } };
 
-const EPS = 0.01;
+const CONTACT_EPS = 1e-7;
 
 function rayCircle(
   ox: number,
@@ -36,39 +36,36 @@ function rayCircle(
   const fx = cx - ox;
   const fy = cy - oy;
   const t = fx * dx + fy * dy;
+  // Contato inicial (inclusive leve penetração numérica) bloqueia só ao avançar
+  // contra o obstáculo. Tangenciar ou se afastar não é uma nova colisão.
+  if (Math.hypot(fx, fy) <= r + CONTACT_EPS) return t > 1e-9 ? 0 : Infinity;
   const p2 = fx * fx + fy * fy - t * t;
   if (p2 > r * r) return Infinity;
   const t0 = t - Math.sqrt(r * r - p2);
-  return t0 > EPS ? t0 : Infinity;
-}
-
-function raySegment(
-  ox: number,
-  oy: number,
-  dx: number,
-  dy: number,
-  ax: number,
-  ay: number,
-  bx: number,
-  by: number,
-): number {
-  const ex = bx - ax;
-  const ey = by - ay;
-  const den = dx * ey - dy * ex;
-  if (Math.abs(den) < 1e-9) return Infinity;
-  const t = ((ax - ox) * ey - (ay - oy) * ex) / den;
-  const u = ((ax - ox) * dy - (ay - oy) * dx) / den;
-  return t > EPS && u >= 0 && u <= 1 ? t : Infinity;
+  // Uma folga pequena ainda é um contato futuro válido.
+  return t0 >= 0 ? t0 : Infinity;
 }
 
 /** Distância até a branca encostar na cápsula da tabela. */
 function rayCushion(ox: number, oy: number, dx: number, dy: number, s: Segment): number {
   const l = Math.sqrt(s.lengthSq);
-  const nx = (-s.dy / l) * BALL_RADIUS;
-  const ny = (s.dx / l) * BALL_RADIUS;
+  const tx = s.dx / l,
+    ty = s.dy / l;
+  const nx = -ty,
+    ny = tx;
+  const x = ox - s.x1,
+    y = oy - s.y1;
+  const normal = x * nx + y * ny;
+  const vn = dx * nx + dy * ny;
+  let face = Infinity;
+  const side = normal >= 0 ? 1 : -1;
+  if (side * vn < -1e-9) {
+    const t = Math.max(0, (side * BALL_RADIUS - normal) / vn);
+    const along = (x + dx * t) * tx + (y + dy * t) * ty;
+    if (along >= 0 && along <= l) face = t;
+  }
   return Math.min(
-    raySegment(ox, oy, dx, dy, s.x1 + nx, s.y1 + ny, s.x2 + nx, s.y2 + ny),
-    raySegment(ox, oy, dx, dy, s.x1 - nx, s.y1 - ny, s.x2 - nx, s.y2 - ny),
+    face,
     rayCircle(ox, oy, dx, dy, s.x1, s.y1, BALL_RADIUS),
     rayCircle(ox, oy, dx, dy, s.x2, s.y2, BALL_RADIUS),
   );
@@ -111,9 +108,11 @@ export function predictShot(
   if (hit && tBall <= tCushion) {
     const gx = cue.x + dx * tBall;
     const gy = cue.y + dy * tBall;
-    const nx = (hit.x - gx) / BALL_DIAMETER;
-    const ny = (hit.y - gy) / BALL_DIAMETER;
-    const fullness = dx * nx + dy * ny;
+    // No contato inicial pode haver leve sobreposição: usa uma normal unitária.
+    const distance = Math.hypot(hit.x - gx, hit.y - gy) || 1;
+    const nx = (hit.x - gx) / distance;
+    const ny = (hit.y - gy) / distance;
+    const fullness = Math.max(0, Math.min(1, dx * nx + dy * ny));
     return {
       kind: 'ball',
       ghost: { x: gx, y: gy },
