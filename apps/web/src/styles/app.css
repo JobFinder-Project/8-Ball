@@ -92,6 +92,39 @@ button:hover {
   display: flex;
   gap: 6px;
 }
+.audio-credits summary {
+  display: grid;
+  place-items: center;
+  min-width: 28px;
+  height: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  cursor: pointer;
+}
+.audio-credits summary::-webkit-details-marker {
+  display: none;
+}
+.audio-credits-panel {
+  position: fixed;
+  z-index: 100;
+  top: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(420px, 90vw);
+  max-height: 60vh;
+  overflow-y: auto;
+  touch-action: pan-y;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: 0 8px 32px #0008;
+  font-size: 14px;
+  user-select: text;
+}
+.audio-credits-panel a {
+  color: var(--accent);
+}
 
 .player {
   background: var(--surface);
