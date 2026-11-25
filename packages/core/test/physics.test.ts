@@ -3,6 +3,7 @@ import {
   applyCueStrike,
   BALL_DIAMETER,
   createSimulation,
+  detectPocket,
   simulateUntilRest,
   step,
   type Ball,
@@ -21,7 +22,7 @@ describe('saída', () => {
       expect(b.x).toBeGreaterThan(0);
       expect(b.x).toBeLessThan(L);
       expect(b.y).toBeGreaterThan(0);
-      expect(b.y).toBeLessThan(W);
+      expect(b.y, JSON.stringify(b)).toBeLessThan(W);
     }
   });
 
@@ -80,7 +81,9 @@ describe('efeito lateral', () => {
   function reboundAngle(spinX: number): number {
     const balls = layout({ 0: [800, 900] });
     const sim = createSimulation(table, balls);
-    applyCueStrike(balls[0]!, { angle: -Math.PI / 4, power: 0.3, spin: { x: spinX, y: 0 } });
+    // Incidência normal é o cenário de simetria: em incidência oblíqua o atrito
+    // também depende do deslize tangencial e pode atingir o limite de Coulomb.
+    applyCueStrike(balls[0]!, { angle: -Math.PI / 2, power: 0.3, spin: { x: spinX, y: 0 } });
     let hit = false;
     for (let i = 0; i < 5000 && !hit; i++)
       step(sim, 1 / 1000, { onCushionContact: () => (hit = true) });
@@ -99,6 +102,27 @@ describe('efeito lateral', () => {
 });
 
 describe('caçapas', () => {
+  it.each([0, 1, 2, 3, 4, 5])('centro sobre a abertura %s cai mesmo antes da garganta', (id) => {
+    const pocket = table.pockets[id]!;
+    const ball = layout({
+      0: [
+        pocket.center.x - pocket.axis.x * (pocket.radius - 1),
+        pocket.center.y - pocket.axis.y * (pocket.radius - 1),
+      ],
+    })[0]!;
+    expect(detectPocket(ball, table)?.id).toBe(id);
+  });
+
+  it.each([0, 1, 2, 3, 4, 5])('não captura um centro ainda apoiado antes da abertura %s', (id) => {
+    const pocket = table.pockets[id]!;
+    const ball = layout({
+      0: [
+        pocket.center.x - pocket.axis.x * (pocket.radius + 1),
+        pocket.center.y - pocket.axis.y * (pocket.radius + 1),
+      ],
+    })[0]!;
+    expect(detectPocket(ball, table)).toBeNull();
+  });
   it('bola de canto entra na caçapa 0', () => {
     const balls = layout({ 0: [600, 600], 1: [300, 300] });
     const sim = createSimulation(table, balls);
@@ -123,7 +147,7 @@ describe('caçapas', () => {
     applyCueStrike(balls[0]!, { angle: 0, power: 0.2, spin: { x: 0, y: 0 } });
     const pots: number[] = [];
     simulateUntilRest(sim, { onPocket: (_b, p) => pots.push(p.id) });
-    expect(pots).toEqual([2]);
+    expect(pots, JSON.stringify(balls[0])).toEqual([2]);
   });
 
   it('bola que continua em jogo nunca termina fora da área de jogo', () => {
@@ -132,7 +156,7 @@ describe('caçapas', () => {
       const sim = createSimulation(table, balls);
       applyCueStrike(balls[0]!, { angle: 0, power: 0.12, spin: { x: 0, y: 0 } });
       simulateUntilRest(sim);
-      if (balls[0]!.active) expect(balls[0]!.y).toBeGreaterThan(0);
+      if (balls[0]!.active) expect(balls[0]!.y, JSON.stringify(balls[0])).toBeGreaterThan(0);
     }
   });
 });
