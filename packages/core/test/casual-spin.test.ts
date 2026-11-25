@@ -16,6 +16,7 @@ import {
   type Spin,
 } from '../src';
 import { layout, table } from './helpers';
+const topRail = table.cushions.find((s) => s.y1 === 0 && s.y2 === 0 && s.x1 <= 500 && s.x2 >= 500)!;
 
 const spins: Spin[] = [
   { x: 0, y: 0 },
@@ -156,7 +157,7 @@ describe('efeito casual ativado somente no primeiro impacto', () => {
     const cue = layout({ 0: [500, 28.575] })[0]!;
     applyCueStrike(cue, { angle: -Math.PI / 2, power: 0.5, spin: { x, y: 0 } });
     expect(cue.side).toBe(0);
-    resolveCushionContact(cue, table.cushions[1]!, DEFAULT_PHYSICS);
+    resolveCushionContact(cue, topRail, DEFAULT_PHYSICS);
     expect(cue.pendingEffect).toBeUndefined();
     expect(Math.sign(cue.vx)).toBe(x);
   });

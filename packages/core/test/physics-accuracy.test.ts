@@ -12,6 +12,7 @@ import {
   type Ball,
 } from '../src';
 import { layout, table } from './helpers';
+const topRail = table.cushions.find((s) => s.y1 === 0 && s.y2 === 0 && s.x1 <= 500 && s.x2 >= 500)!;
 
 const energy = (b: Ball) =>
   0.5 * (b.vx ** 2 + b.vy ** 2) + 0.2 * (b.ux ** 2 + b.uy ** 2 + b.side ** 2);
@@ -153,7 +154,7 @@ describe('precisão dos impactos e energia', () => {
     ball.vx = 9000;
     ball.vy = -100;
     ball.side = 11000;
-    const wall = table.cushions[1]!;
+    const wall = topRail;
     const before = energy(ball);
     resolveCushionContact(ball, wall, DEFAULT_PHYSICS);
     expect(energy(ball)).toBeLessThanOrEqual(before + 1e-6);
@@ -162,7 +163,7 @@ describe('precisão dos impactos e energia', () => {
   it.each([-1, 1])('o sinal do giro na tabela corresponde ao ponto do taco (%s)', (side) => {
     const ball = layout({ 0: [500, BALL_RADIUS - 0.001] })[0]!;
     applyCueStrike(ball, { angle: -Math.PI / 2, power: 0.5, spin: { x: side, y: 0 } });
-    resolveCushionContact(ball, table.cushions[1]!, DEFAULT_PHYSICS);
+    resolveCushionContact(ball, topRail, DEFAULT_PHYSICS);
     expect(Math.sign(ball.vx)).toBe(side);
   });
 
@@ -173,7 +174,7 @@ describe('precisão dos impactos e energia', () => {
           const ball = layout({ 0: [500, BALL_RADIUS - 0.001] })[0]!;
           Object.assign(ball, { vx, vy, side, ux: 4500, uy: -3000 });
           const before = energy(ball);
-          resolveCushionContact(ball, table.cushions[1]!, DEFAULT_PHYSICS);
+          resolveCushionContact(ball, topRail, DEFAULT_PHYSICS);
           expect(energy(ball)).toBeLessThanOrEqual(before + 1e-6);
           expect(ball.vy).toBeGreaterThan(0);
         }

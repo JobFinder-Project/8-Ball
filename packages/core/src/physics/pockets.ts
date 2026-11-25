@@ -12,7 +12,12 @@ export function detectPocket(ball: Ball, table: TableGeometry): Pocket | null {
     // a garganta. Sem isso, uma bola lenta podia parar suspensa dentro do buraco.
     const overOpening =
       Math.hypot(ball.x - pocket.center.x, ball.y - pocket.center.y) < pocket.radius;
-    if (along > 0 || overOpening) return pocket;
+    // A garganta tem largura limitada: não pode capturar a mesa inteira atrás
+    // de uma linha infinita. A abertura e o tubo compartilham centro/raio.
+    const lateral = Math.abs(
+      (ball.x - pocket.throat.x) * -pocket.axis.y + (ball.y - pocket.throat.y) * pocket.axis.x,
+    );
+    if ((along > 0 && lateral < pocket.radius) || overOpening) return pocket;
   }
   // Salvaguarda numérica: uma bola fora da mesa vai para a caçapa mais próxima.
   const { length, width } = table.spec;

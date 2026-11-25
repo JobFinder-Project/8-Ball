@@ -25,31 +25,6 @@ export function createTableGeometry(spec: TableSpec): TableGeometry {
   const cty = 42;
   const mid = L / 2;
 
-  const cushions: Segment[] = [
-    // tabela de cima
-    segment(ctx, -cty, cj, 0),
-    segment(cj, 0, mid - sm, 0),
-    segment(mid - sm, 0, mid - st, -sd),
-    segment(mid + st, -sd, mid + sm, 0),
-    segment(mid + sm, 0, L - cj, 0),
-    segment(L - cj, 0, L - ctx, -cty),
-    // tabela de baixo
-    segment(ctx, W + cty, cj, W),
-    segment(cj, W, mid - sm, W),
-    segment(mid - sm, W, mid - st, W + sd),
-    segment(mid + st, W + sd, mid + sm, W),
-    segment(mid + sm, W, L - cj, W),
-    segment(L - cj, W, L - ctx, W + cty),
-    // cabeceira
-    segment(-cty, ctx, 0, cj),
-    segment(0, cj, 0, W - cj),
-    segment(0, W - cj, -cty, W - ctx),
-    // pé
-    segment(L + cty, ctx, L, cj),
-    segment(L, cj, L, W - cj),
-    segment(L, W - cj, L + cty, W - ctx),
-  ];
-
   const playfield: Vec2[] = [
     [ctx, -cty],
     [cj, 0],
@@ -181,12 +156,51 @@ export function createTableGeometry(spec: TableSpec): TableGeometry {
     },
   ];
 
+  // As faces visíveis e os segmentos de colisão partem do mesmo perfil. Cada
+  // bico ganha uma curva discreta em direção à caçapa mais próxima; a mesma
+  // polilinha alimenta a malha e a detecção contínua de impacto.
+  const roundedJaw = (a: Vec2, b: Vec2): Vec2[] => {
+    const middle = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+    const pocket = pockets.reduce((best, p) =>
+      Math.hypot(p.center.x - middle.x, p.center.y - middle.y) <
+      Math.hypot(best.center.x - middle.x, best.center.y - middle.y)
+        ? p
+        : best,
+    );
+    const dx = pocket.center.x - middle.x,
+      dy = pocket.center.y - middle.y;
+    const d = Math.hypot(dx, dy) || 1;
+    const control = { x: middle.x + (4 * dx) / d, y: middle.y + (4 * dy) / d };
+    return Array.from({ length: 5 }, (_, i) => {
+      const t = i / 4,
+        u = 1 - t;
+      return {
+        x: u * u * a.x + 2 * u * t * control.x + t * t * b.x,
+        y: u * u * a.y + 2 * u * t * control.y + t * t * b.y,
+      };
+    });
+  };
+  const curvedCushions: Segment[] = [];
+  const curvedShapes = cushionShapes.map((shape) => {
+    const front = [
+      ...roundedJaw(shape[0]!, shape[1]!),
+      shape[2]!,
+      ...roundedJaw(shape[2]!, shape[3]!).slice(1),
+    ];
+    for (let i = 1; i < front.length; i++) {
+      const a = front[i - 1]!,
+        b = front[i]!;
+      curvedCushions.push(segment(a.x, a.y, b.x, b.y));
+    }
+    return [...front, ...shape.slice(4)];
+  });
+
   return {
     spec,
-    cushions,
+    cushions: curvedCushions,
     pockets,
     playfield,
-    cushionShapes,
+    cushionShapes: curvedShapes,
     headSpot: { x: L / 4, y: W / 2 },
     footSpot: { x: (L * 3) / 4, y: W / 2 },
     centerSpot: { x: L / 2, y: W / 2 },
