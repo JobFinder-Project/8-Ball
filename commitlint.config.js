@@ -1,5 +1,11 @@
 export default {
   extends: ['@commitlint/config-conventional'],
+  parserPreset: {
+    parserOpts: {
+      headerPattern: /^(?::[a-z0-9_+-]+:\s+)?(\w*)(?:\((.*)\))?!?: (.*)$/,
+      headerCorrespondence: ['type', 'scope', 'subject'],
+    },
+  },
   rules: {
     'scope-enum': [
       2,
