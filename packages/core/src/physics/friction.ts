@@ -16,7 +16,9 @@ export function applyClothFriction(ball: Ball, dt: number, p: PhysicsParams): vo
   const sy = ball.vy - ball.uy;
   const slip = Math.hypot(sx, sy);
 
-  if (slip > 1) {
+  // Uma folga de 1 mm/s apagava o deslize restante sem trocar o impulso
+  // correspondente, causando um pequeno salto na transição oblíqua.
+  if (slip > 1e-9) {
     const dv = p.slidingFriction * p.gravity * dt;
     if (dv * 3.5 >= slip) {
       ball.vx -= (sx * 2) / 7;

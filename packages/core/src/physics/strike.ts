@@ -50,10 +50,13 @@ export function activateCueEffect(ball: Ball): void {
   const effect = ball.pendingEffect;
   if (!effect) return;
   const speed = Math.hypot(ball.vx, ball.vy);
-  // Soma o efeito escolhido ao rolamento natural adquirido no feltro.
-  // Efeito zero não apaga o giro natural nem muda uma tacada neutra.
-  ball.ux += ball.vx * effect.y * effect.amount;
-  ball.uy += ball.vy * effect.y * effect.amount;
+  // Mistura o rolamento natural com o giro escolhido, em vez de apenas somar.
+  // Somar fazia uma puxada parcial virar seguimento após uma aproximação longa.
+  // No centro preserva o rolamento; nos extremos o controle define ±k·v,
+  // independentemente de quanto a branca já rolou antes do primeiro impacto.
+  const natural = 1 - Math.abs(effect.y);
+  ball.ux = natural * ball.ux + ball.vx * effect.y * effect.amount;
+  ball.uy = natural * ball.uy + ball.vy * effect.y * effect.amount;
   // Ponto à direita do eixo do taco produz torque negativo em torno de z.
   ball.side = -speed * effect.x * effect.amount;
   delete ball.pendingEffect;
