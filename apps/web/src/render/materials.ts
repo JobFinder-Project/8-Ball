@@ -1,4 +1,10 @@
-import { Color, DoubleSide, MeshPhysicalMaterial, MeshStandardMaterial } from 'three';
+import {
+  Color,
+  DoubleSide,
+  MeshBasicMaterial,
+  MeshPhysicalMaterial,
+  MeshStandardMaterial,
+} from 'three';
 import { createFeltTextures } from './textures/feltTexture';
 import { createWoodTextures, MAPLE, WALNUT } from './textures/woodTexture';
 
@@ -41,13 +47,12 @@ export function createMaterials(maxAnisotropy: number) {
       envMapIntensity: 0.7,
     }),
     leather: new MeshStandardMaterial({ color: '#170d07', roughness: 0.55, envMapIntensity: 0.3 }),
-    pocketLiner: new MeshStandardMaterial({
-      color: '#020202',
-      roughness: 1,
+    pocketLiner: new MeshBasicMaterial({
+      vertexColors: true,
       side: DoubleSide,
-      envMapIntensity: 0,
+      toneMapped: false,
     }),
-    pocketBottom: new MeshStandardMaterial({ color: '#010101', roughness: 1, envMapIntensity: 0 }),
+    pocketBottom: new MeshStandardMaterial({ color: '#090705', roughness: 1, envMapIntensity: 0 }),
     pearl: new MeshPhysicalMaterial({
       color: '#efe9db',
       roughness: 0.22,

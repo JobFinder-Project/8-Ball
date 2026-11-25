@@ -1,11 +1,13 @@
 import {
   CircleGeometry,
   CylinderGeometry,
+  Color,
   ExtrudeGeometry,
+  Float32BufferAttribute,
   Group,
   Mesh,
   PlaneGeometry,
-  RingGeometry,
+  TorusGeometry,
   ShapeGeometry,
   type BufferGeometry,
   type Material,
@@ -14,6 +16,7 @@ import {
 import type { TableGeometry } from '@sinuca/core';
 import type { Materials } from '../materials';
 import { rectUnionCircles, roundedRect, shapeFrom } from '../shapes';
+import { cutPocketOpening } from './pocketContours';
 
 /** Alturas em mm, com o feltro em y = 0. */
 export const HEIGHTS = {
@@ -64,8 +67,11 @@ export function buildTableModel(table: TableGeometry, mat: Materials): Group {
   group.name = 'table';
   const { length: L, width: W, railWidth: rw, cushionWidth: cw } = table.spec;
 
-  // Leito: só a área de jogo, até a garganta das caçapas.
-  group.add(mesh(flat(new ShapeGeometry(shapeFrom(table.playfield)), 0), mat.felt));
+  const feltOutline = table.pockets.reduce(
+    (outline, pocket) => cutPocketOpening(outline, pocket.center, pocket.radius),
+    table.playfield,
+  );
+  group.add(mesh(flat(new ShapeGeometry(shapeFrom(feltOutline)), 0), mat.felt));
 
   // Borrachas com feltro.
   for (const outline of table.cushionShapes) {
@@ -77,7 +83,7 @@ export function buildTableModel(table: TableGeometry, mat: Materials): Group {
   // Trilho de madeira com recortes das caçapas.
   const outer = roundedRect(-rw, -rw, L + rw * 2, W + rw * 2, 70, 12);
   const holes = table.pockets.map((p) => ({ x: p.center.x, y: p.center.y, r: p.radius + 2 }));
-  const inner = rectUnionCircles(-cw, -cw, L + cw, W + cw, holes);
+  const inner = rectUnionCircles(-cw, -cw, L + cw, W + cw, holes, 5760);
   group.add(
     mesh(
       extrude(shapeFrom(outer, [inner]), HEIGHTS.railBottom, HEIGHTS.railTop, 7, 12),
@@ -87,25 +93,40 @@ export function buildTableModel(table: TableGeometry, mat: Materials): Group {
     ),
   );
 
-  // Caçapas: tubo escuro, fundo e couro sobre o trilho.
+  // O tubo e o recorte usam o centro/raio da abertura usados pelo núcleo.
   for (const p of table.pockets) {
-    const tube = mesh(
-      new CylinderGeometry(p.radius, p.radius * 0.9, HEIGHTS.pocketDepth, 48, 1, true),
-      mat.pocketLiner,
+    const liner = new CylinderGeometry(
+      p.radius,
+      p.radius * 0.48,
+      HEIGHTS.pocketDepth,
+      128,
+      12,
+      true,
     );
+    const positions = liner.getAttribute('position');
+    const colors: number[] = [];
+    const top = new Color('#493027'),
+      bottomColor = new Color('#080504');
+    for (let i = 0; i < positions.count; i++) {
+      const t = (positions.getY(i) + HEIGHTS.pocketDepth / 2) / HEIGHTS.pocketDepth;
+      const color = bottomColor.clone().lerp(top, t * t);
+      colors.push(color.r, color.g, color.b);
+    }
+    liner.setAttribute('color', new Float32BufferAttribute(colors, 3));
+    const tube = mesh(liner, mat.pocketLiner);
     tube.position.set(p.center.x, -HEIGHTS.pocketDepth / 2 + 1, p.center.y);
     group.add(tube);
     const bottom = mesh(
-      flat(new CircleGeometry(p.radius, 40), -HEIGHTS.pocketDepth + 2),
+      flat(new CircleGeometry(p.radius * 0.48, 96), -HEIGHTS.pocketDepth + 2),
       mat.pocketBottom,
     );
     bottom.position.set(p.center.x, 0, p.center.y);
     group.add(bottom);
-    const rim = mesh(
-      flat(new RingGeometry(p.radius + 1, p.radius + 12, 48), HEIGHTS.railTop + 0.6),
-      mat.leather,
-    );
-    rim.position.set(p.center.x, 0, p.center.y);
+    // Couro apenas no lado externo da boca: não forma um anel sobre o feltro.
+    const rim = mesh(new TorusGeometry(p.radius + 4, 5, 10, 96, Math.PI), mat.leather);
+    rim.rotation.x = -Math.PI / 2;
+    rim.rotation.z = -Math.atan2(p.axis.y, p.axis.x) - Math.PI / 2;
+    rim.position.set(p.center.x, HEIGHTS.railTop - 4, p.center.y);
     group.add(rim);
   }
 
